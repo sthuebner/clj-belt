@@ -1,24 +1,35 @@
 (ns sthuebner.belt.datetime-test
   (:use midje.sweet)
   (:require [sthuebner.belt.datetime :as d])
-  (:import [java.util Date]))
+  (:import [java.util Date TimeZone]))
+
+(def default-pattern "yyyy-MM-dd HH:mm:ss Z")
 
 
+(fact "creating date formats"
+  (.toPattern (d/date-format default-pattern)) => default-pattern
+  (.getTimeZone (d/date-format default-pattern)) => (TimeZone/getDefault)
+  (.getTimeZone (d/date-format default-pattern :timezone "UTC")) => (TimeZone/getTimeZone "UTC")
+  (.getTimeZone (d/date-format default-pattern :timezone "Europe/Tallinn")) => (TimeZone/getTimeZone "Europe/Tallinn"))
+
+
+;.;. Work joyfully and peacefully, knowing that right thoughts and right
+;.;. efforts will inevitably bring about right results. -- Allen
 (fact "parsing"
-  (d/parse "1970-01-01 00:00:00 +0000" "yyyy-MM-dd HH:mm:ss Z") => (Date. 0)
-  (d/parse "1970-01-01 00:00:00 +0000" (d/date-format "yyyy-MM-dd HH:mm:ss Z")) => (Date. 0)
+  (d/parse "1970-01-01 00:00:00 +0000" default-pattern) => (Date. 0)
+  (d/parse "1970-01-01 00:00:00 +0000" (d/date-format default-pattern)) => (Date. 0)
 
-  (let [parse-iso (d/make-parser "yyyy-MM-dd HH:mm:ss Z")]
+  (let [parse-iso (d/parser default-pattern)]
     (parse-iso "1970-01-01 00:00:00 +0000") => (Date. 0)))
 
 
 (fact "formatting"
-  (let [df (doto (d/date-format "yyyy-MM-dd HH:mm:ss Z")
-             (.setTimeZone (java.util.TimeZone/getTimeZone "UTC")))]
+  (let [df (d/date-format default-pattern :timezone "UTC")]
     (d/format (Date. 0) df) => "1970-01-01 00:00:00 +0000"
     (d/format 0 df) => "1970-01-01 00:00:00 +0000"
+    (d/format 0 default-pattern :timezone "UTC") => "1970-01-01 00:00:00 +0000"
 
-    (let [format-iso (d/make-formatter df)]
+    (let [format-iso (d/formatter df)]
       (format-iso (Date. 0)) => "1970-01-01 00:00:00 +0000")))
 
 

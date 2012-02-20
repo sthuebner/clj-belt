@@ -1,38 +1,41 @@
 (ns sthuebner.belt.datetime
   (:refer-clojure :exclude [format])
   (:import [java.text SimpleDateFormat]
-           [java.util Date]))
+           [java.util Date TimeZone]))
 
 ;;;; ===================================
 ;;;; Parsers and Formatters
 
-(defmulti date-format class)
+(defmulti date-format (fn [o & opts] (class o)))
 
 (defmethod date-format SimpleDateFormat
-  [this]
-  this)
+  [^SimpleDateFormat o & {:keys [timezone]}]
+  (let [sdf (.clone o)]
+    (if timezone
+      (.setTimeZone sdf (TimeZone/getTimeZone timezone)))
+    sdf))
 
 (defmethod date-format String
-  [^String s]
-  (SimpleDateFormat. s))
+  [^String s & opts]
+  (apply date-format (SimpleDateFormat. s) opts))
 
 
-(defn parse [s format]
-  (.parse (date-format format) s))
+(defn parser [format & opts]
+  (let [format (apply date-format format opts)]
+    (fn [s]
+      (.parse format s))))
 
-(defn make-parser [format]
-  (let [format (date-format format)]
-    (fn [^String s]
-      (parse s format))))
-
-
-(defn format [d format]
-  (.format (date-format format) d))
-
-(defn make-formatter [formaat]
-  (let [formaat (date-format formaat)]
+(defn formatter [format & opts]
+  (let [format (apply date-format format opts)]
     (fn [d]
-      (format d formaat))))
+      (.format format d))))
+
+
+(defn parse [s format & opts]
+  ((apply parser format opts) s))
+
+(defn format [d format & opts]
+  ((apply formatter format opts) d))
 
 
 ;;;; ===================================
@@ -61,5 +64,3 @@
   ([] (Date.))
   ([o]
      (Date. (to-ms o))))
-
-
