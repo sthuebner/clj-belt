@@ -13,8 +13,6 @@
   (.getTimeZone (d/date-format default-pattern :timezone "Europe/Tallinn")) => (TimeZone/getTimeZone "Europe/Tallinn"))
 
 
-;.;. Work joyfully and peacefully, knowing that right thoughts and right
-;.;. efforts will inevitably bring about right results. -- Allen
 (fact "parsing"
   (d/parse "1970-01-01 00:00:00 +0000" default-pattern) => (Date. 0)
   (d/parse "1970-01-01 00:00:00 +0000" (d/date-format default-pattern)) => (Date. 0)
